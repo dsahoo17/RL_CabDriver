@@ -101,7 +101,9 @@ class CabDriver():
         end_state = int(action[1])
         time = int(state[1])
         day = int(state[2])
+        time_state_to_end = 0
         if (start_state == 0) & (end_state == 0):
+            time_state_to_end = 1 #wait time
             next_state = (curr_state, Time_matrix[curr_state][curr_state][time][day], day)
         else:
             if (state[0] != action[0]):
@@ -114,7 +116,21 @@ class CabDriver():
                 time_state_to_end = Time_matrix[start_state][end_state][int(time + time_currLoc_to_start)][day]
             next_state = (end_state, time_state_to_end, state[2])
 
-        return next_state
+        return next_state,time_state_to_end
+
+    def step(self, state, action, Time_matrix):
+        """
+        Take a trip as cabby to get rewards next step and total time spent
+        """
+        # Get the next state and the various time durations
+        next_state, wait_time, transit_time, ride_time = self.next_state_func(
+            state, action, Time_matrix)
+
+        # Calculate the reward based on the different time durations
+        rewards = self.reward_func(wait_time, transit_time, ride_time)
+        total_time = wait_time + transit_time + ride_time
+
+        return rewards, next_state, total_time
 
     def reset(self):
         return self.action_space, self.state_space, self.state_init
